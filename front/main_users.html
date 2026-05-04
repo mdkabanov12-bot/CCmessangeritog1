@@ -137,15 +137,25 @@
             });
         }
 
-        fetch('/get_messages')
-        .then(response => response.json())
-        .then(messages => {
-            setInterval(renderMessages(messages), 3000);
-            scrollToLastMessage(); // Автоскролл к последнему сообщению при загрузке
-        })
-        .catch(error => {
-            console.error('Error:', error);
-        });
+        let firstLoad = true;
+
+        function loadMessages() {
+            fetch('/get_messages')
+            .then(response => response.json())
+            .then(messages => {
+                renderMessages(messages);
+                if (firstLoad) {
+                    scrollToLastMessage();
+                    firstLoad = false;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+
+        loadMessages();
+        setInterval(loadMessages, 3000);
 
         function scrollToLastMessage() {
             const container = document.getElementById('messages');
