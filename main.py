@@ -8,6 +8,16 @@ app = FastAPI()
 BASE_DIR = Path(__file__).parent
 FRONT_DIR = BASE_DIR / "front"
 
+@app.exception_handler(ValueError)
+async def value_error_handler(request: Request, exc: ValueError):
+    return JSONResponse(
+        status_code=400,
+        content={
+            "error": "Manual validation failed",
+            "message": str(exc)
+        }
+    )
+
 def get_all_messages():
     """Получает все сообщения из БД"""
     con = get_db_connection()
