@@ -1,5 +1,5 @@
 from fastapi import FastAPI, Form, status, Cookie
-from fastapi.responses import RedirectResponse, FileResponse, HTMLResponse as html
+from fastapi.responses import JSONResponse, RedirectResponse, FileResponse, HTMLResponse as html
 from db import get_db_connection
 from pathlib import Path
 
