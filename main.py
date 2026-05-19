@@ -54,6 +54,7 @@ async def logself():
 async def regist(username: str = Form(...),
                  password: str = Form(...),
                  role : str = "user"):
+    role = "user"
     nm = [i for i in username]
     flag = True
     for i in nm:
