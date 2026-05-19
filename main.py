@@ -120,10 +120,7 @@ async def logon(username: str = Form(...),
 
 @app.get("/main")
 async def MainMes(username: str | None = Cookie(default="guest")):
-    users_sql = get_all_users()
-    users = []
-    for i in users_sql:
-        users.append(i["username"])
+    users = get_all_users()
     if username in users:
         con = get_db_connection()
         cursor = con.cursor()
