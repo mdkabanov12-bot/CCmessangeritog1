@@ -133,7 +133,7 @@ async def MainMes(username: str | None = Cookie(default="guest")):
         if user:
             return FileResponse(str(FRONT_DIR / "main_users.html"), status_code=status.HTTP_200_OK)
     else:
-        red = RedirectResponse(url="/main", status_code=status.HTTP_303_SEE_OTHER)
+        red = RedirectResponse(url="/regmenu", status_code=status.HTTP_303_SEE_OTHER)
         red.set_cookie(key="username", value="", max_age=0, httponly=True)
         return red
 
