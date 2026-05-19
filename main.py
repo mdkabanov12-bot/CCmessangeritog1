@@ -27,6 +27,15 @@ def get_all_messages():
     con.close()
     return messages
 
+def get_all_users():
+    """Получает все сообщения из БД"""
+    con = get_db_connection()
+    cursor = con.cursor()
+    cursor.execute("SELECT username FROM Messages")
+    users = cursor.fetchall()
+    con.close()
+    return users
+
 @app.get("/")
 async def self(username: str | None = Cookie(default = None)):
     if not username is None:
@@ -111,13 +120,22 @@ async def logon(username: str = Form(...),
 
 @app.get("/main")
 async def MainMes(username: str | None = Cookie(default="guest")):
-    con = get_db_connection()
-    cursor = con.cursor()
-    cursor.execute("SELECT username, password, role FROM users WHERE username = ?", (username,))
-    user = cursor.fetchone()
-    con.close()
-    if user:
-        return FileResponse(str(FRONT_DIR / "main_users.html"), status_code=status.HTTP_200_OK)
+    users_sql = get_all_users()
+    users = []
+    for i in users_sql:
+        users.append(i["username"])
+    if username in users:
+        con = get_db_connection()
+        cursor = con.cursor()
+        cursor.execute("SELECT username, password, role FROM users WHERE username = ?", (username,))
+        user = cursor.fetchone()
+        con.close()
+        if user:
+            return FileResponse(str(FRONT_DIR / "main_users.html"), status_code=status.HTTP_200_OK)
+    else:
+        red = RedirectResponse(url="/main", status_code=status.HTTP_303_SEE_OTHER)
+        red.set_cookie(key="username", value="", max_age=0, httponly=True)
+        return red
 
 @app.post("/send_message")
 async def send_message(username: str = Cookie(default="user"),
