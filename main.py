@@ -120,19 +120,13 @@ async def logon(username: str = Form(...),
 
 @app.get("/main")
 async def MainMes(username: str | None = Cookie(default="guest")):
-    users = get_all_users()
-    if username in users:
-        con = get_db_connection()
-        cursor = con.cursor()
-        cursor.execute("SELECT username, password, role FROM users WHERE username = ?", (username,))
-        user = cursor.fetchone()
-        con.close()
-        if user:
-            return FileResponse(str(FRONT_DIR / "main_users.html"), status_code=status.HTTP_200_OK)
-    else:
-        red = RedirectResponse(url="/regmenu", status_code=status.HTTP_303_SEE_OTHER)
-        red.set_cookie(key="username", value="", max_age=0, httponly=True)
-        return red
+    con = get_db_connection()
+    cursor = con.cursor()
+    cursor.execute("SELECT username, password, role FROM users WHERE username = ?", (username,))
+    user = cursor.fetchone()
+    con.close()
+    if user:
+        return FileResponse(str(FRONT_DIR / "main_users.html"), status_code=status.HTTP_200_OK)
 
 @app.post("/send_message")
 async def send_message(username: str = Cookie(default="user"),
