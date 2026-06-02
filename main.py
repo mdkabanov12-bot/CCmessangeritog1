@@ -5,7 +5,7 @@ from pathlib import Path
 
 app = FastAPI()
 
-BASE_DIR = Path(file).parent
+BASE_DIR = Path(__file__).parent
 FRONT_DIR = BASE_DIR / "front"
 
 @app.exception_handler(ValueError)
@@ -117,15 +117,22 @@ async def logon(username: str = Form(...),
         con.commit()
         con.close()
         return FileResponse(str(FRONT_DIR / "logerror.html"), status_code=status.HTTP_200_OK)
+
 @app.get("/main")
 async def MainMes(username: str | None = Cookie(default="guest")):
-    con = get_db_connection()
-    cursor = con.cursor()
-    cursor.execute("SELECT username, password, role FROM users WHERE username = ?", (username,))
-    user = cursor.fetchone()
-    con.close()
-    if user:
-        return FileResponse(str(FRONT_DIR / "main_users.html"), status_code=status.HTTP_200_OK)
+    users = get_all_users()
+    if username in users:
+        con = get_db_connection()
+        cursor = con.cursor()
+        cursor.execute("SELECT username, password, role FROM users WHERE username = ?", (username,))
+        user = cursor.fetchone()
+        con.close()
+        if user:
+            return FileResponse(str(FRONT_DIR / "main_users.html"), status_code=status.HTTP_200_OK)
+    else:
+        red = RedirectResponse(url="/regmenu", status_code=status.HTTP_303_SEE_OTHER)
+        red.set_cookie(key="username", value="", max_age=0, httponly=True)
+        return red
 
 @app.post("/send_message")
 async def send_message(username: str = Cookie(default="user"),
