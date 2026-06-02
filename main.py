@@ -83,16 +83,16 @@ async def regist(username: str = Form(...),
         if existing_user:
             con.close()
             return FileResponse(str(FRONT_DIR / "regerror1.html"), status_code=status.HTTP_200_OK)
-        username = quote(username)
+        q_username = quote(username)
         cursor.execute(
             "INSERT INTO users (username, password, role) VALUES (?, ?, ?)",
-            (username, password, role)
+            (q_username, password, role)
         )
 
         con.commit()
         con.close()
         res = RedirectResponse(url="/main", status_code=status.HTTP_303_SEE_OTHER)
-        res.set_cookie(key="username", value=username, max_age=7200, httponly=True)
+        res.set_cookie(key="username", value=q_username, max_age=7200, httponly=True)
         return res
     else:
         return FileResponse(str(FRONT_DIR / "regerror2.html"), status_code=status.HTTP_200_OK)
@@ -107,11 +107,11 @@ async def logon(username: str = Form(...),
     rows = cursor.fetchall()
     res = []
     for name, pas in rows:
-        res.append({name:pas})
+        res.append({unquote(name):pas})
 
     if {username:password} in res:
-        username = quote(username)
-        red.set_cookie(key="username", value=username, max_age=7200, httponly=True)
+        q_username = quote(username)
+        red.set_cookie(key="username", value=q_username, max_age=7200, httponly=True)
         con.commit()
         con.close()
         return red
@@ -122,10 +122,10 @@ async def logon(username: str = Form(...),
 
 @app.get("/main")
 async def MainMes(username: str | None = Cookie(default="guest")):
-    username = unquote(username)
+    u_username = unquote(username)
     con = get_db_connection()
     cursor = con.cursor()
-    cursor.execute("SELECT username, password, role FROM users WHERE username = ?", (username,))
+    cursor.execute("SELECT username, password, role FROM users WHERE username = ?", (u_username,))
     user = cursor.fetchone()
     con.close()
     if user:
