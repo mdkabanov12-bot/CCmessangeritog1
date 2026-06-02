@@ -2,11 +2,10 @@ from fastapi import FastAPI, Form, status, Cookie
 from fastapi.responses import JSONResponse, RedirectResponse, FileResponse, HTMLResponse as html
 from db import get_db_connection
 from pathlib import Path
-from urllib.parse import quote, unquote
 
 app = FastAPI()
 
-BASE_DIR = Path(__file__).parent
+BASE_DIR = Path(file).parent
 FRONT_DIR = BASE_DIR / "front"
 
 @app.exception_handler(ValueError)
@@ -68,12 +67,12 @@ async def regist(username: str = Form(...),
     nm = [i for i in username]
     flag = True
     for i in nm:
-        if not ("0"<=i<="9" or "a"<=i<="z" or "A"<=i<="Z" or i == "_" or "а"<=i<="я" or "А"<=i<="Я"):
+        if not ("0"<=i<="9" or "a"<=i<="z" or "A"<=i<="Z" or i == "_"):
             flag = False
     if flag:
         con = get_db_connection()
         cursor = con.cursor()
-        
+
         cursor.execute(
             "SELECT id FROM users WHERE username = ?",
             (username,)
@@ -83,16 +82,16 @@ async def regist(username: str = Form(...),
         if existing_user:
             con.close()
             return FileResponse(str(FRONT_DIR / "regerror1.html"), status_code=status.HTTP_200_OK)
-        q_username = quote(username)
+
         cursor.execute(
             "INSERT INTO users (username, password, role) VALUES (?, ?, ?)",
-            (q_username, password, role)
+            (username, password, role)
         )
 
         con.commit()
         con.close()
         res = RedirectResponse(url="/main", status_code=status.HTTP_303_SEE_OTHER)
-        res.set_cookie(key="username", value=q_username, max_age=7200, httponly=True)
+        res.set_cookie(key="username", value=username, max_age=7200, httponly=True)
         return res
     else:
         return FileResponse(str(FRONT_DIR / "regerror2.html"), status_code=status.HTTP_200_OK)
@@ -107,11 +106,10 @@ async def logon(username: str = Form(...),
     rows = cursor.fetchall()
     res = []
     for name, pas in rows:
-        res.append({unquote(name):pas})
+        res.append({name:pas})
 
     if {username:password} in res:
-        q_username = quote(username)
-        red.set_cookie(key="username", value=q_username, max_age=7200, httponly=True)
+        red.set_cookie(key="username", value=username, max_age=7200, httponly=True)
         con.commit()
         con.close()
         return red
@@ -119,13 +117,11 @@ async def logon(username: str = Form(...),
         con.commit()
         con.close()
         return FileResponse(str(FRONT_DIR / "logerror.html"), status_code=status.HTTP_200_OK)
-
 @app.get("/main")
 async def MainMes(username: str | None = Cookie(default="guest")):
-    u_username = unquote(username)
     con = get_db_connection()
     cursor = con.cursor()
-    cursor.execute("SELECT username, password, role FROM users WHERE username = ?", (u_username,))
+    cursor.execute("SELECT username, password, role FROM users WHERE username = ?", (username,))
     user = cursor.fetchone()
     con.close()
     if user:
@@ -134,7 +130,6 @@ async def MainMes(username: str | None = Cookie(default="guest")):
 @app.post("/send_message")
 async def send_message(username: str = Cookie(default="user"),
                        message: str = Form(...)):
-    username = unquote(username)
     if len(message) <= 100:
         print(username)
         con = get_db_connection()
@@ -164,12 +159,10 @@ async def exit():
 
 @app.get("/profil")
 async def profil_page(username: str | None = Cookie()):
-    username = quote(username)
     return FileResponse(str(FRONT_DIR / "profil.html"), status_code=status.HTTP_200_OK)
 
 @app.get("/api/profil")
 async def get_profil_data(username: str | None = Cookie()):
-    username = unquote(username)
     con = get_db_connection()
     cursor = con.cursor()
     cursor.execute("SELECT * FROM users WHERE username = ?", (username,))
@@ -184,7 +177,6 @@ async def get_messages():
 
 @app.get("/messageht")
 async def messageht(username: str | None = Cookie(default="guest")):
-    username = unquote(username)
     return FileResponse(str(FRONT_DIR / "write.html"), status_code=status.HTTP_200_OK)
 
 @app.get("/test")
