@@ -69,7 +69,7 @@ async def regist(username: str = Form(...),
     nm = [i for i in username]
     flag = True
     for i in nm:
-        if not ("0"<=i<="9" or "a"<=i<="z" or "A"<=i<="Z" or i == "_"):
+        if not ("0"<=i<="9" or "a"<=i<="z" or "A"<=i<="Z" or i == "_" or "а"<=i<="я" or "А"<=i<="Я"):
             flag = False
     if flag:
         con = get_db_connection()
