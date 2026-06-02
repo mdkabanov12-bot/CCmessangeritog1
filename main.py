@@ -39,7 +39,6 @@ def get_all_users():
 
 @app.get("/")
 async def self(username: str | None = Cookie(default = None)):
-    username = unquote(username)
     if not username is None:
         username = username
     else:
