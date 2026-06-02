@@ -164,7 +164,7 @@ async def exit():
 
 @app.get("/profil")
 async def profil_page(username: str | None = Cookie()):
-    username = unquote(username)
+    username = quote(username)
     return FileResponse(str(FRONT_DIR / "profil.html"), status_code=status.HTTP_200_OK)
 
 @app.get("/api/profil")
