@@ -2,6 +2,7 @@ from fastapi import FastAPI, Form, status, Cookie
 from fastapi.responses import JSONResponse, RedirectResponse, FileResponse, HTMLResponse as html
 from db import get_db_connection
 from pathlib import Path
+from urllib.parse import quote, unquote
 
 app = FastAPI()
 
@@ -38,6 +39,7 @@ def get_all_users():
 
 @app.get("/")
 async def self(username: str | None = Cookie(default = None)):
+    username = unquote(username)
     if not username is None:
         username = username
     else:
@@ -72,7 +74,7 @@ async def regist(username: str = Form(...),
     if flag:
         con = get_db_connection()
         cursor = con.cursor()
-
+        
         cursor.execute(
             "SELECT id FROM users WHERE username = ?",
             (username,)
@@ -82,7 +84,7 @@ async def regist(username: str = Form(...),
         if existing_user:
             con.close()
             return FileResponse(str(FRONT_DIR / "regerror1.html"), status_code=status.HTTP_200_OK)
-
+        username = quote(username)
         cursor.execute(
             "INSERT INTO users (username, password, role) VALUES (?, ?, ?)",
             (username, password, role)
@@ -109,6 +111,7 @@ async def logon(username: str = Form(...),
         res.append({name:pas})
 
     if {username:password} in res:
+        username = quote(username)
         red.set_cookie(key="username", value=username, max_age=7200, httponly=True)
         con.commit()
         con.close()
@@ -120,6 +123,7 @@ async def logon(username: str = Form(...),
 
 @app.get("/main")
 async def MainMes(username: str | None = Cookie(default="guest")):
+    username = unquote(username)
     con = get_db_connection()
     cursor = con.cursor()
     cursor.execute("SELECT username, password, role FROM users WHERE username = ?", (username,))
@@ -131,6 +135,7 @@ async def MainMes(username: str | None = Cookie(default="guest")):
 @app.post("/send_message")
 async def send_message(username: str = Cookie(default="user"),
                        message: str = Form(...)):
+    username = unquote(username)
     if len(message) <= 100:
         print(username)
         con = get_db_connection()
@@ -160,10 +165,12 @@ async def exit():
 
 @app.get("/profil")
 async def profil_page(username: str | None = Cookie()):
+    username = unquote(username)
     return FileResponse(str(FRONT_DIR / "profil.html"), status_code=status.HTTP_200_OK)
 
 @app.get("/api/profil")
 async def get_profil_data(username: str | None = Cookie()):
+    username = unquote(username)
     con = get_db_connection()
     cursor = con.cursor()
     cursor.execute("SELECT * FROM users WHERE username = ?", (username,))
@@ -178,6 +185,7 @@ async def get_messages():
 
 @app.get("/messageht")
 async def messageht(username: str | None = Cookie(default="guest")):
+    username = unquote(username)
     return FileResponse(str(FRONT_DIR / "write.html"), status_code=status.HTTP_200_OK)
 
 @app.get("/test")
