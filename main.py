@@ -122,7 +122,7 @@ async def MainMes(username: str | None = Cookie(default="guest")):
 @app.post("/send_message")
 async def send_message(username: str = Cookie(default="user"),
                        message: str = Form(...)):
-    if len(message) <= 100:
+    if len(message) <= 200:
         print(username)
         con = get_db_connection()
         cursor = con.cursor()
@@ -141,7 +141,7 @@ async def send_message(username: str = Cookie(default="user"),
         con.close()
         return RedirectResponse(url="/main", status_code=status.HTTP_303_SEE_OTHER)
     else:
-        raise ValueError("нельзя вводить сообщения длиной больше 100 символов")
+        raise ValueError("нельзя вводить сообщения длиной больше 200 символов")
 
 @app.get("/exit")
 async def exit():
